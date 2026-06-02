@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Mtn Dew Kwik Climb 2026</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #faf8f4; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const SWEEPSTAKES_START = new Date("2026-06-01T00:00:00");
+const TOTAL_DAYS = 77;
+
+function getDayNumber() {
+  const now = new Date();
+  const diff = Math.floor((now - SWEEPSTAKES_START) / (1000 * 60 * 60 * 24));
+  return Math.min(Math.max(diff + 1, 1), TOTAL_DAYS);
+}
+
+function formatDate(d) {
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+
+const defaultDay = () => ({
+  free: 0, form: 0, points: 0, purchase: 0, ad: 0,
+  entries: "", visits: "",
+});
+
+const C = {
+  bg: "#faf8f4", surface: "#ffffff", border: "#e8e2d9",
+  text: "#1a1612", muted: "#8c7e6e", accent: "#2d6a2d",
+  accentLight: "#e8f3e8", yellow: "#c8860a",
+  red: "#c0392b", redLight: "#fdf0ee", dew: "#4a9e1f",
+};
+
+function App() {
+  const [log, setLog] = useState({});
+  const [activeDay, setActiveDay] = useState(getDayNumber());
+  const [loaded, setLoaded] = useState(false);
+  const [accountNumber, setAccountNumber] = useState("");
+  const [copyLabel, setCopyLabel] = useState("Copy");
+  const importRef = useRef();
+
+  useEffect(() => {
+    try {
+      const logRes = localStorage.getItem("kwik-log");
+      const acctRes = localStorage.getItem("kwik-account");
+      if (logRes) setLog(JSON.parse(logRes));
+      if (acctRes) setAccountNumber(acctRes);
+    } catch (e) {}
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+    try { localStorage.setItem("kwik-log", JSON.stringify(log)); } catch (e) {}
+  }, [log, loaded]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    try { localStorage.setItem("kwik-account", accountNumber); } catch (e) {}
+  }, [accountNumber, loaded]);
+
+  const todayNum = getDayNumber();
+  const today = log[activeDay] || defaultDay();
+  const isFuture = activeDay > todayNum;
+
+  function updateDay(field, value) {
+    if (isFuture) return;
+    setLog((prev) => ({
+      ...prev,
+      [activeDay]: { ...(prev[activeDay] || defaultDay()), [field]: value },
+    }));
+  }
+
+  const totalEntries = Object.values(log).reduce((max, d) => Math.max(max, parseInt(d.entries) || 0), 0);
+
+  const yesterdayData = log[todayNum - 1];
+  const currentVisits = yesterdayData ? (parseInt(yesterdayData.visits) || 0) : 0;
+
+  const daysRemaining = TOTAL_DAYS - todayNum;
+  const visitsNeeded = Math.max(0, daysRemaining * 5 - currentVisits - daysRemaining);
+  const targetPerDay = daysRemaining > 0 ? Math.ceil(visitsNeeded / daysRemaining) : 0;
+  const onTrack = currentVisits + daysRemaining >= daysRemaining * 5;
+
+  const dayDate = new Date(SWEEPSTAKES_START.getTime() + (activeDay - 1) * 86400000);
+
+  function copyAccount() {
+    navigator.clipboard.writeText(accountNumber).then(() => {
+      setCopyLabel("Copied!");
+      setTimeout(() => setCopyLabel("Copy"), 2000);
+    });
+  }
+
+  function exportData() {
+    const data = { log, accountNumber };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "kwik-climb-backup.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importData(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.log) setLog(data.log);
+        if (data.accountNumber) setAccountNumber(data.accountNumber);
+      } catch {
+        alert("Invalid backup file.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
+  const ticketSources = [
+    { key: "free", label: "Free Daily", max: 1, color: C.accent },
+    { key: "form", label: "AMOE", max: 5, color: C.dew },
+    { key: "points", label: "Visit Redemption", max: 5, color: C.accent },
+    { key: "purchase", label: "Purchase", max: 5, color: C.yellow },
+    { key: "ad", label: "Watch Ad", max: 1, color: C.dew },
+  ];
+
+  if (!loaded) return (
+    <div style={{ background: C.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, fontFamily: "Georgia, serif" }}>
+      Loading...
+    </div>
+  );
+
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", fontFamily: "-apple-system, 'Helvetica Neue', sans-serif", color: C.text, paddingBottom: 48 }}>
+
+      <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: "20px 20px 16px" }}>
+        <div style={{ fontSize: 11, color: C.muted, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Kwik Rewards</div>
+        <div style={{ fontSize: 20, fontWeight: "700", color: C.text, letterSpacing: -0.5 }}>Mtn Dew Kwik Climb 2026</div>
+        <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>Jun 1 – Aug 16 · {TOTAL_DAYS} days</div>
+        <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
+          <input type="text" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="Account number"
+            style={{ flex: 1, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 10px", fontSize: 13, fontFamily: "inherit", color: C.text, outline: "none" }} />
+          <button onClick={copyAccount} disabled={!accountNumber}
+            style={{ fontSize: 12, color: accountNumber ? C.accent : C.muted, background: accountNumber ? C.accentLight : C.bg, border: `1px solid ${accountNumber ? C.accent : C.border}`, borderRadius: 6, padding: "6px 12px", cursor: accountNumber ? "pointer" : "default", fontFamily: "inherit", fontWeight: "600", whiteSpace: "nowrap" }}>
+            {copyLabel}
+          </button>
+        </div>
+        <div style={{ marginTop: 8 }}>
+          <a href="https://kwiktrip.com/game-alternate-means-of-entry" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: C.accent, textDecoration: "none" }}>
+            Alternate means of entry →
+          </a>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", background: C.surface, borderBottom: `1px solid ${C.border}` }}>
+        {[
+          { label: "Entries", value: totalEntries.toLocaleString(), color: C.accent },
+          { label: "Visit Pts", value: currentVisits, color: onTrack ? C.accent : C.red },
+          { label: "Days Left", value: daysRemaining, color: C.text },
+        ].map((s) => (
+          <div key={s.label} style={{ padding: "14px 8px", textAlign: "center", borderRight: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 19, fontWeight: "700", color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ padding: "14px 16px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <button onClick={() => setActiveDay(d => Math.max(1, d - 1))} disabled={activeDay === 1}
+          style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: activeDay === 1 ? C.border : C.text, fontSize: 18, cursor: activeDay === 1 ? "default" : "pointer" }}>
+          ‹
+        </button>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontWeight: "700", fontSize: 15 }}>{formatDate(dayDate)}</div>
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Day {activeDay} of {TOTAL_DAYS}</div>
+        </div>
+        <button onClick={() => setActiveDay(d => Math.min(todayNum, d + 1))} disabled={activeDay >= todayNum}
+          style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: activeDay >= todayNum ? C.border : C.text, fontSize: 18, cursor: activeDay >= todayNum ? "default" : "pointer" }}>
+          ›
+        </button>
+      </div>
+
+      <div style={{ padding: "0 16px" }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", opacity: isFuture ? 0.5 : 1 }}>
+          <div style={{ padding: "14px 16px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {ticketSources.map(({ key, label, max, color }) => (
+              <div key={key} style={{ background: C.bg, borderRadius: 8, padding: "10px 12px", border: `1px solid ${C.border}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                  <span style={{ fontSize: 11, color: C.muted }}>{label}</span>
+                  <span style={{ fontSize: 11, color, fontWeight: "600" }}>{today[key] || 0}/{max}</span>
+                </div>
+                <div style={{ display: "flex", gap: 4 }}>
+                  {Array.from({ length: max }, (_, i) => (
+                    <button key={i} onClick={() => updateDay(key, today[key] === i + 1 ? i : i + 1)}
+                      style={{ flex: 1, height: 20, border: "none", cursor: isFuture ? "default" : "pointer", borderRadius: 4, background: i < (today[key] || 0) ? color : C.border, transition: "background 0.12s" }} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "10px 16px 14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {[
+              { key: "entries", label: "Entries", color: C.accent },
+              { key: "visits", label: "Visits", color: C.accent },
+            ].map(({ key, label, color }) => (
+              <div key={key} style={{ background: C.bg, borderRadius: 8, padding: "10px 12px", border: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>{label}</div>
+                <input type="number" min="0" value={today[key]} onChange={(e) => updateDay(key, e.target.value)}
+                  placeholder="0" disabled={isFuture}
+                  style={{ background: "transparent", border: "none", borderBottom: `2px solid ${C.border}`, color, fontSize: 22, fontWeight: "700", width: "100%", fontFamily: "inherit", outline: "none", padding: "2px 0" }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: "14px 16px 0" }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
+          <div style={{ fontSize: 12, fontWeight: "600", color: C.text, marginBottom: 12 }}>Visit Recommendation</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+            {[
+              { label: "Current Visits", value: currentVisits, color: C.accent },
+              { label: "Days Left", value: daysRemaining, color: C.text },
+              { label: "Still Need", value: Math.max(0, daysRemaining * 4 - currentVisits), color: C.text },
+            ].map((s) => (
+              <div key={s.label} style={{ textAlign: "center", background: C.bg, borderRadius: 8, padding: "10px 6px", border: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 20, fontWeight: "700", color: s.color }}>{s.value}</div>
+                <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background: onTrack ? C.accentLight : C.redLight, border: `1px solid ${onTrack ? C.accent : C.red}`, borderRadius: 8, padding: "12px 14px", textAlign: "center" }}>
+            {onTrack ? (
+              <div style={{ color: C.accent, fontSize: 13, fontWeight: "600" }}>You're on track! Keep earning visits daily.</div>
+            ) : (
+              <>
+                <div style={{ color: C.red, fontSize: 22, fontWeight: "700" }}>{targetPerDay} visits/day</div>
+                <div style={{ color: C.red, fontSize: 12, marginTop: 4 }}>needed on top of daily ad visits to sustain 5 redemptions/day ({visitsNeeded} more store visits total)</div>
+              </>
+            )}
+          </div>
+          <div style={{ marginTop: 8, fontSize: 11, color: C.muted }}>Based on yesterday's visit total</div>
+        </div>
+      </div>
+
+      <div style={{ padding: "14px 16px 0" }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
+          <div style={{ fontSize: 12, fontWeight: "600", color: C.text, marginBottom: 12 }}>Sunday Jackpot Ladder</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {[
+              { week: 1, date: "Jun 7", prize: 10000 },
+              { week: 4, date: "Jun 28", prize: 25000 },
+              { week: 7, date: "Jul 12", prize: 35000 },
+              { week: 8, date: "Jul 19", prize: 40000 },
+              { week: 9, date: "Jul 26", prize: 45000 },
+              { week: 10, date: "Aug 2", prize: 50000 },
+              { week: 11, date: "Aug 9", prize: 100000 },
+              { week: 13, date: "Aug 16", prize: 250000 },
+            ].map(({ week, date, prize }) => {
+              const pct = prize / 250000;
+              const isPast = todayNum > week * 7;
+              return (
+                <div key={week} style={{ display: "flex", alignItems: "center", gap: 10, opacity: isPast ? 0.35 : 1 }}>
+                  <div style={{ fontSize: 11, color: C.muted, width: 38, flexShrink: 0 }}>{date}</div>
+                  <div style={{ flex: 1, height: 8, background: C.border, borderRadius: 4, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct * 100}%`, borderRadius: 4, background: prize >= 100000 ? C.dew : prize >= 40000 ? C.accent : "#a8c8a8" }} />
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: prize >= 100000 ? "700" : "400", color: prize >= 100000 ? C.dew : C.muted, width: 66, textAlign: "right" }}>
+                    ${prize.toLocaleString()}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: "14px 16px 0" }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
+          <div style={{ fontSize: 12, fontWeight: "600", color: C.text, marginBottom: 12 }}>Backup & Restore</div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={exportData}
+              style={{ flex: 1, padding: "10px", background: C.accentLight, border: `1px solid ${C.accent}`, borderRadius: 8, color: C.accent, fontSize: 13, fontWeight: "600", fontFamily: "inherit", cursor: "pointer" }}>
+              Export
+            </button>
+            <button onClick={() => importRef.current.click()}
+              style={{ flex: 1, padding: "10px", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, color: C.muted, fontSize: 13, fontWeight: "600", fontFamily: "inherit", cursor: "pointer" }}>
+              Import
+            </button>
+            <input ref={importRef} type="file" accept=".json" onChange={importData} style={{ display: "none" }} />
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
