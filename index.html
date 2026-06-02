@@ -38,6 +38,8 @@ const defaultDay = () => ({
   entries: "", visits: "",
 });
 
+const amoeMode = new URLSearchParams(window.location.search).get('amoe') === 'true';
+
 const C = {
   bg: "#faf8f4", surface: "#ffffff", border: "#e8e2d9",
   text: "#1a1612", muted: "#8c7e6e", accent: "#2d6a2d",
@@ -132,13 +134,14 @@ function App() {
     e.target.value = "";
   }
 
-  const ticketSources = [
+  const allTicketSources = [
     { key: "free", label: "Free Daily", max: 1, color: C.accent },
-    { key: "form", label: "AMOE", max: 5, color: C.dew },
+    { key: "form", label: "AMOE", max: 5, color: C.dew, amoeOnly: true },
     { key: "points", label: "Visit Redemption", max: 5, color: C.accent },
     { key: "purchase", label: "Purchase", max: 5, color: C.yellow },
-    { key: "ad", label: "Watch Ad", max: 1, color: C.dew },
+    { key: "ad", label: "Watch Ad", max: 1, color: C.dew, amoeOnly: true },
   ];
+  const ticketSources = allTicketSources.filter(s => !s.amoeOnly || amoeMode);
 
   if (!loaded) return (
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, fontFamily: "Georgia, serif" }}>
@@ -153,19 +156,19 @@ function App() {
         <div style={{ fontSize: 11, color: C.muted, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Kwik Rewards</div>
         <div style={{ fontSize: 20, fontWeight: "700", color: C.text, letterSpacing: -0.5 }}>Mtn Dew Kwik Climb 2026</div>
         <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>Jun 1 – Aug 16 · {TOTAL_DAYS} days</div>
-        <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
+        {amoeMode && <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
           <input type="text" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="Account number"
             style={{ flex: 1, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 10px", fontSize: 13, fontFamily: "inherit", color: C.text, outline: "none" }} />
           <button onClick={copyAccount} disabled={!accountNumber}
             style={{ fontSize: 12, color: accountNumber ? C.accent : C.muted, background: accountNumber ? C.accentLight : C.bg, border: `1px solid ${accountNumber ? C.accent : C.border}`, borderRadius: 6, padding: "6px 12px", cursor: accountNumber ? "pointer" : "default", fontFamily: "inherit", fontWeight: "600", whiteSpace: "nowrap" }}>
             {copyLabel}
           </button>
-        </div>
-        <div style={{ marginTop: 8 }}>
+        </div>}
+        {amoeMode && <div style={{ marginTop: 8 }}>
           <a href="https://kwiktrip.com/game-alternate-means-of-entry" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: C.accent, textDecoration: "none" }}>
             Alternate means of entry →
           </a>
-        </div>
+        </div>}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", background: C.surface, borderBottom: `1px solid ${C.border}` }}>
