@@ -89,8 +89,13 @@ function App() {
 
   const totalEntries = Object.values(log).reduce((max, d) => Math.max(max, parseInt(d.entries) || 0), 0);
 
-  const yesterdayData = log[todayNum - 1];
-  const currentVisits = yesterdayData ? (parseInt(yesterdayData.visits) || 0) : 0;
+  // Use active day's visits if entered, else most recent day with a value
+  const activeDayVisits = parseInt((log[activeDay] || {}).visits) || 0;
+  const currentVisits = activeDayVisits || Object.keys(log)
+    .map(Number)
+    .filter(d => d <= todayNum && parseInt(log[d].visits) > 0)
+    .sort((a, b) => b - a)
+    .reduce((val, d) => val || (parseInt(log[d].visits) || 0), 0);
 
   const daysRemaining = TOTAL_DAYS - todayNum;
   const visitsNeeded = Math.max(0, daysRemaining * 5 - currentVisits - daysRemaining);
@@ -319,3 +324,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
 </html>
+
