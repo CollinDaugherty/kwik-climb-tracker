@@ -3,16 +3,193 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Mtn Dew Kwik Climb 2026</title>
+  <title>Kwik Climb 2026</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #faf8f4; }
+    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #e8e8ed;
+      --bg2: #ffffff;
+      --bg3: #e8e8ed;
+      --card: #ffffff;
+      --card2: #e8e8ed;
+      --label: #000000;
+      --label2: #3c3c43;
+      --label3: #3c3c4399;
+      --label4: #3c3c432e;
+      --sep: #d1d1d6;
+      --accent: #34c759;
+      --accent2: #30d158;
+      --red: #ff3b30;
+      --yellow: #ff9f0a;
+      --blue: #007aff;
+      --fill: #78788033;
+      --fill2: #78788029;
+      --fill3: #7878801f;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000;
+        --bg2: #2c2c2e;
+        --bg3: #000000;
+        --card: #2c2c2e;
+        --card2: #3a3a3c;
+        --label: #ffffff;
+        --label2: #ebebf5;
+        --label3: #ebebf599;
+        --label4: #ebebf52e;
+        --sep: #48484a;
+        --accent: #30d158;
+        --accent2: #34c759;
+        --red: #ff453a;
+        --yellow: #ffd60a;
+        --blue: #0a84ff;
+        --fill: #78788052;
+        --fill2: #78788042;
+        --fill3: #7878803d;
+        }
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--label);
+      font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      padding-bottom: env(safe-area-inset-bottom, 24px);
+    }
+
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
-    ::-webkit-scrollbar { display: none; }
+    input:focus { outline: none; }
+    button { -webkit-tap-highlight-color: transparent; }
+
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--label3);
+      padding: 0 4px;
+      margin-bottom: 8px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 0.5px solid var(--sep);
+      gap: 12px;
+    }
+    .row:last-child { border-bottom: none; }
+
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 980px;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 8px 20px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      font-family: inherit;
+    }
+    .pill-btn:active { opacity: 0.7; }
+
+    .seg-bar {
+      display: flex;
+      gap: 3px;
+    }
+    .seg-bar button {
+      flex: 1;
+      height: 6px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .seg-bar button:active { transform: scaleY(1.3); }
+
+    .stat-val {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+    .stat-lbl {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--label3);
+      margin-top: 4px;
+      letter-spacing: 0.01em;
+    }
+
+    .num-input {
+      background: transparent;
+      border: none;
+      font-family: inherit;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--label);
+      width: 100%;
+      -webkit-appearance: none;
+    }
+
+    .nav-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--fill2);
+      border: none;
+      color: var(--blue);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .nav-btn:disabled { color: var(--label4); cursor: default; }
+    .nav-btn:not(:disabled):active { background: var(--fill); }
+
+    .status-banner {
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .prize-bar-track {
+      flex: 1;
+      height: 4px;
+      background: var(--fill3);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .prize-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:active { opacity: 0.7; }
   </style>
 </head>
 <body>
@@ -22,6 +199,7 @@ const { useState, useEffect, useRef } = React;
 
 const SWEEPSTAKES_START = new Date("2026-06-01T00:00:00");
 const TOTAL_DAYS = 77;
+const amoeMode = new URLSearchParams(window.location.search).get('amoe') === 'true';
 
 function getDayNumber() {
   const now = new Date();
@@ -30,22 +208,17 @@ function getDayNumber() {
 }
 
 function formatDate(d) {
-  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+}
+
+function formatDateShort(d) {
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 const defaultDay = () => ({
   free: 0, form: 0, points: 0, purchase: 0, ad: 0,
   entries: "", visits: "",
 });
-
-const amoeMode = new URLSearchParams(window.location.search).get('amoe') === 'true';
-
-const C = {
-  bg: "#faf8f4", surface: "#ffffff", border: "#e8e2d9",
-  text: "#1a1612", muted: "#8c7e6e", accent: "#2d6a2d",
-  accentLight: "#e8f3e8", yellow: "#c8860a",
-  red: "#c0392b", redLight: "#fdf0ee", dew: "#4a9e1f",
-};
 
 function App() {
   const [log, setLog] = useState({});
@@ -81,7 +254,7 @@ function App() {
 
   function updateDay(field, value) {
     if (isFuture) return;
-    setLog((prev) => ({
+    setLog(prev => ({
       ...prev,
       [activeDay]: { ...(prev[activeDay] || defaultDay()), [field]: value },
     }));
@@ -89,7 +262,6 @@ function App() {
 
   const totalEntries = Object.values(log).reduce((max, d) => Math.max(max, parseInt(d.entries) || 0), 0);
 
-  // Use active day's visits if entered, else most recent day with a value
   const activeDayVisits = parseInt((log[activeDay] || {}).visits) || 0;
   const currentVisits = activeDayVisits || Object.keys(log)
     .map(Number)
@@ -101,6 +273,7 @@ function App() {
   const visitsNeeded = Math.max(0, daysRemaining * 5 - currentVisits - daysRemaining);
   const targetPerDay = daysRemaining > 0 ? Math.ceil(visitsNeeded / daysRemaining) : 0;
   const onTrack = currentVisits + daysRemaining >= daysRemaining * 5;
+  const stillNeed = Math.max(0, daysRemaining * 4 - currentVisits);
 
   const dayDate = new Date(SWEEPSTAKES_START.getTime() + (activeDay - 1) * 86400000);
 
@@ -112,13 +285,10 @@ function App() {
   }
 
   function exportData() {
-    const data = { log, accountNumber };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify({ log, accountNumber }, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = "kwik-climb-backup.json";
-    a.click();
+    a.href = url; a.download = "kwik-climb-backup.json"; a.click();
     URL.revokeObjectURL(url);
   }
 
@@ -131,185 +301,215 @@ function App() {
         const data = JSON.parse(ev.target.result);
         if (data.log) setLog(data.log);
         if (data.accountNumber) setAccountNumber(data.accountNumber);
-      } catch {
-        alert("Invalid backup file.");
-      }
+      } catch { alert("Invalid backup file."); }
     };
     reader.readAsText(file);
     e.target.value = "";
   }
 
   const allTicketSources = [
-    { key: "free", label: "Free Daily", max: 1, color: C.accent },
-    { key: "form", label: "AMOE", max: 5, color: C.dew, amoeOnly: true },
-    { key: "points", label: "Visit Redemption", max: 5, color: C.accent },
-    { key: "purchase", label: "Purchase", max: 5, color: C.yellow },
-    { key: "ad", label: "Watch Ad", max: 1, color: C.dew },
+    { key: "free", label: "Free Daily", max: 1, color: "var(--accent)" },
+    { key: "form", label: "AMOE", max: 5, color: "var(--blue)", amoeOnly: true },
+    { key: "points", label: "Visit Redemption", max: 5, color: "var(--accent)" },
+    { key: "purchase", label: "Purchase", max: 5, color: "var(--yellow)" },
+    { key: "ad", label: "Watch Ad", max: 1, color: "var(--blue)" },
   ];
   const ticketSources = allTicketSources.filter(s => !s.amoeOnly || amoeMode);
 
+  const prizes = [
+    { week: 1, date: "Jun 7", prize: 10000 },
+    { week: 4, date: "Jun 28", prize: 25000 },
+    { week: 7, date: "Jul 12", prize: 35000 },
+    { week: 8, date: "Jul 19", prize: 40000 },
+    { week: 9, date: "Jul 26", prize: 45000 },
+    { week: 10, date: "Aug 2", prize: 50000 },
+    { week: 11, date: "Aug 9", prize: 100000 },
+    { week: 13, date: "Aug 16", prize: 250000 },
+  ];
+
   if (!loaded) return (
-    <div style={{ background: C.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, fontFamily: "Georgia, serif" }}>
-      Loading...
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--label3)", fontSize: 15 }}>
+      Loading…
     </div>
   );
 
   return (
-    <div style={{ background: C.bg, minHeight: "100vh", fontFamily: "-apple-system, 'Helvetica Neue', sans-serif", color: C.text, paddingBottom: 48 }}>
+    <div style={{ maxWidth: 430, margin: "0 auto", padding: "0 0 32px" }}>
 
-      <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: "20px 20px 16px" }}>
-        <div style={{ fontSize: 11, color: C.muted, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Kwik Rewards</div>
-        <div style={{ fontSize: 20, fontWeight: "700", color: C.text, letterSpacing: -0.5 }}>Mtn Dew Kwik Climb 2026</div>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>Jun 1 – Aug 16 · {TOTAL_DAYS} days</div>
-        {amoeMode && <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
-          <input type="text" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="Account number"
-            style={{ flex: 1, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 10px", fontSize: 13, fontFamily: "inherit", color: C.text, outline: "none" }} />
-          <button onClick={copyAccount} disabled={!accountNumber}
-            style={{ fontSize: 12, color: accountNumber ? C.accent : C.muted, background: accountNumber ? C.accentLight : C.bg, border: `1px solid ${accountNumber ? C.accent : C.border}`, borderRadius: 6, padding: "6px 12px", cursor: accountNumber ? "pointer" : "default", fontFamily: "inherit", fontWeight: "600", whiteSpace: "nowrap" }}>
-            {copyLabel}
-          </button>
-        </div>}
-        {amoeMode && <div style={{ marginTop: 8 }}>
-          <a href="https://kwiktrip.com/game-alternate-means-of-entry" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: C.accent, textDecoration: "none" }}>
-            Alternate means of entry →
-          </a>
-        </div>}
+      {/* Header */}
+      <div style={{ padding: "56px 20px 20px" }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--label3)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>Kwik Rewards</div>
+        <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: -1, color: "var(--label)", lineHeight: 1.1 }}>Kwik Climb 2026</div>
+        <div style={{ fontSize: 15, color: "var(--label3)", marginTop: 6, fontWeight: 400 }}>Jun 1 – Aug 16</div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", background: C.surface, borderBottom: `1px solid ${C.border}` }}>
-        {[
-          { label: "Entries", value: totalEntries.toLocaleString(), color: C.accent },
-          { label: "Visit Pts", value: currentVisits, color: onTrack ? C.accent : C.red },
-          { label: "Days Left", value: daysRemaining, color: C.text },
-        ].map((s) => (
-          <div key={s.label} style={{ padding: "14px 8px", textAlign: "center", borderRight: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: 19, fontWeight: "700", color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ padding: "14px 16px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <button onClick={() => setActiveDay(d => Math.max(1, d - 1))} disabled={activeDay === 1}
-          style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: activeDay === 1 ? C.border : C.text, fontSize: 18, cursor: activeDay === 1 ? "default" : "pointer" }}>
-          ‹
-        </button>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontWeight: "700", fontSize: 15 }}>{formatDate(dayDate)}</div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Day {activeDay} of {TOTAL_DAYS}</div>
+      {/* Stats row */}
+      <div style={{ padding: "0 16px", marginBottom: 32 }}>
+        <div className="card" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
+          {[
+            { label: "Entries", value: totalEntries.toLocaleString(), color: "var(--accent)" },
+            { label: "Visit Pts", value: currentVisits, color: onTrack ? "var(--accent)" : "var(--red)" },
+            { label: "Days Left", value: daysRemaining, color: "var(--label)" },
+          ].map((s, i) => (
+            <div key={s.label} style={{ padding: "16px 12px", textAlign: "center", borderRight: i < 2 ? "0.5px solid var(--sep)" : "none" }}>
+              <div className="stat-val" style={{ color: s.color }}>{s.value}</div>
+              <div className="stat-lbl">{s.label}</div>
+            </div>
+          ))}
         </div>
-        <button onClick={() => setActiveDay(d => Math.min(todayNum, d + 1))} disabled={activeDay >= todayNum}
-          style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: activeDay >= todayNum ? C.border : C.text, fontSize: 18, cursor: activeDay >= todayNum ? "default" : "pointer" }}>
-          ›
-        </button>
       </div>
 
-      <div style={{ padding: "0 16px" }}>
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", opacity: isFuture ? 0.5 : 1 }}>
-          <div style={{ padding: "14px 16px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {ticketSources.map(({ key, label, max, color }) => (
-              <div key={key} style={{ background: C.bg, borderRadius: 8, padding: "10px 12px", border: `1px solid ${C.border}` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span style={{ fontSize: 11, color: C.muted }}>{label}</span>
-                  <span style={{ fontSize: 11, color, fontWeight: "600" }}>{today[key] || 0}/{max}</span>
-                </div>
-                <div style={{ display: "flex", gap: 4 }}>
-                  {Array.from({ length: max }, (_, i) => (
-                    <button key={i} onClick={() => updateDay(key, today[key] === i + 1 ? i : i + 1)}
-                      style={{ flex: 1, height: 20, border: "none", cursor: isFuture ? "default" : "pointer", borderRadius: 4, background: i < (today[key] || 0) ? color : C.border, transition: "background 0.12s" }} />
-                  ))}
-                </div>
+      {/* Day nav */}
+      <div style={{ padding: "0 20px", marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <button className="nav-btn" onClick={() => setActiveDay(d => Math.max(1, d - 1))} disabled={activeDay === 1}>‹</button>
+          <div style={{ textAlign: "center", flex: 1, margin: "0 12px" }}>
+            <div style={{ fontSize: 17, fontWeight: 600, color: "var(--label)" }}>{formatDate(dayDate)}</div>
+            <div style={{ fontSize: 13, color: "var(--label3)", marginTop: 2 }}>Day {activeDay} of {TOTAL_DAYS}</div>
+          </div>
+          <button className="nav-btn" onClick={() => setActiveDay(d => Math.min(todayNum, d + 1))} disabled={activeDay >= todayNum}>›</button>
+        </div>
+      </div>
+
+      {/* Ticket sources */}
+      <div style={{ padding: "0 16px", marginBottom: 16 }}>
+        <div className="section-header">Tickets</div>
+        <div className="card" style={{ opacity: isFuture ? 0.4 : 1 }}>
+          {ticketSources.map(({ key, label, max, color }, idx) => (
+            <div key={key} className="row" style={{ flexDirection: "column", alignItems: "flex-start", gap: 10 }}>
+              <div style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 17, fontWeight: 400, color: "var(--label)" }}>{label}</span>
+                <span style={{ fontSize: 15, fontWeight: 600, color, opacity: 0.8 }}>{today[key] || 0}/{max}</span>
+              </div>
+              <div className="seg-bar" style={{ width: "100%" }}>
+                {Array.from({ length: max }, (_, i) => (
+                  <button key={i}
+                    onClick={() => updateDay(key, today[key] === i + 1 ? i : i + 1)}
+                    style={{ background: i < (today[key] || 0) ? color : "var(--fill3)" }}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Entries + Visits */}
+      <div style={{ padding: "0 16px", marginBottom: 16 }}>
+        <div className="section-header">Daily Totals</div>
+        <div className="card" style={{ opacity: isFuture ? 0.4 : 1 }}>
+          {[
+            { key: "entries", label: "Entries", color: "var(--accent)" },
+            { key: "visits", label: "Visits", color: "var(--accent)" },
+          ].map(({ key, label, color }) => (
+            <div key={key} className="row" style={{ justifyContent: "space-between" }}>
+              <span style={{ fontSize: 17, color: "var(--label)", fontWeight: 400 }}>{label}</span>
+              <input
+                className="num-input"
+                type="number" min="0"
+                value={today[key]}
+                onChange={(e) => updateDay(key, e.target.value)}
+                placeholder="—"
+                disabled={isFuture}
+                style={{ textAlign: "right", width: 120, color, fontSize: 22, fontWeight: 600 }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Visit Recommendation */}
+      <div style={{ padding: "0 16px", marginBottom: 16 }}>
+        <div className="section-header">Visit Recommendation</div>
+        <div className="card">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "0.5px solid var(--sep)" }}>
+            {[
+              { label: "Current", value: currentVisits, color: "var(--accent)" },
+              { label: "Days Left", value: daysRemaining, color: "var(--label)" },
+              { label: "Still Need", value: stillNeed, color: stillNeed > 0 ? "var(--red)" : "var(--accent)" },
+            ].map((s, i) => (
+              <div key={s.label} style={{ padding: "16px 12px", textAlign: "center", borderRight: i < 2 ? "0.5px solid var(--sep)" : "none" }}>
+                <div className="stat-val" style={{ color: s.color, fontSize: 22 }}>{s.value}</div>
+                <div className="stat-lbl">{s.label}</div>
               </div>
             ))}
           </div>
-          <div style={{ padding: "10px 16px 14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {[
-              { key: "entries", label: "Entries", color: C.accent },
-              { key: "visits", label: "Visits", color: C.accent },
-            ].map(({ key, label, color }) => (
-              <div key={key} style={{ background: C.bg, borderRadius: 8, padding: "10px 12px", border: `1px solid ${C.border}` }}>
-                <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>{label}</div>
-                <input type="number" min="0" value={today[key]} onChange={(e) => updateDay(key, e.target.value)}
-                  placeholder="0" disabled={isFuture}
-                  style={{ background: "transparent", border: "none", borderBottom: `2px solid ${C.border}`, color, fontSize: 22, fontWeight: "700", width: "100%", fontFamily: "inherit", outline: "none", padding: "2px 0" }} />
+          <div style={{ padding: "14px 16px" }}>
+            <div className="status-banner" style={{ background: onTrack ? "rgba(52,199,89,0.12)" : "rgba(255,59,48,0.1)" }}>
+              <div style={{ fontSize: 28 }}>{onTrack ? "✅" : "⚠️"}</div>
+              <div>
+                {onTrack ? (
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>You're on track!</div>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "var(--red)" }}>{targetPerDay} store visits/day needed</div>
+                    <div style={{ fontSize: 13, color: "var(--label3)", marginTop: 2 }}>on top of daily ad visits · {visitsNeeded} total</div>
+                  </>
+                )}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>
 
-      <div style={{ padding: "14px 16px 0" }}>
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
-          <div style={{ fontSize: 12, fontWeight: "600", color: C.text, marginBottom: 12 }}>Visit Recommendation</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
-            {[
-              { label: "Current Visits", value: currentVisits, color: C.accent },
-              { label: "Days Left", value: daysRemaining, color: C.text },
-              { label: "Still Need", value: Math.max(0, daysRemaining * 4 - currentVisits), color: C.text },
-            ].map((s) => (
-              <div key={s.label} style={{ textAlign: "center", background: C.bg, borderRadius: 8, padding: "10px 6px", border: `1px solid ${C.border}` }}>
-                <div style={{ fontSize: 20, fontWeight: "700", color: s.color }}>{s.value}</div>
-                <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ background: onTrack ? C.accentLight : C.redLight, border: `1px solid ${onTrack ? C.accent : C.red}`, borderRadius: 8, padding: "12px 14px", textAlign: "center" }}>
-            {onTrack ? (
-              <div style={{ color: C.accent, fontSize: 13, fontWeight: "600" }}>You're on track! Keep earning visits daily.</div>
-            ) : (
-              <>
-                <div style={{ color: C.red, fontSize: 22, fontWeight: "700" }}>{targetPerDay} visits/day</div>
-                <div style={{ color: C.red, fontSize: 12, marginTop: 4 }}>needed on top of daily ad visits to sustain 5 redemptions/day ({visitsNeeded} more store visits total)</div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ padding: "14px 16px 0" }}>
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
-          <div style={{ fontSize: 12, fontWeight: "600", color: C.text, marginBottom: 12 }}>Sunday Jackpot Ladder</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {[
-              { week: 1, date: "Jun 7", prize: 10000 },
-              { week: 4, date: "Jun 28", prize: 25000 },
-              { week: 7, date: "Jul 12", prize: 35000 },
-              { week: 8, date: "Jul 19", prize: 40000 },
-              { week: 9, date: "Jul 26", prize: 45000 },
-              { week: 10, date: "Aug 2", prize: 50000 },
-              { week: 11, date: "Aug 9", prize: 100000 },
-              { week: 13, date: "Aug 16", prize: 250000 },
-            ].map(({ week, date, prize }) => {
-              const pct = prize / 250000;
-              const isPast = todayNum > week * 7;
-              return (
-                <div key={week} style={{ display: "flex", alignItems: "center", gap: 10, opacity: isPast ? 0.35 : 1 }}>
-                  <div style={{ fontSize: 11, color: C.muted, width: 38, flexShrink: 0 }}>{date}</div>
-                  <div style={{ flex: 1, height: 8, background: C.border, borderRadius: 4, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${pct * 100}%`, borderRadius: 4, background: prize >= 100000 ? C.dew : prize >= 40000 ? C.accent : "#a8c8a8" }} />
-                  </div>
-                  <div style={{ fontSize: 11, fontWeight: prize >= 100000 ? "700" : "400", color: prize >= 100000 ? C.dew : C.muted, width: 66, textAlign: "right" }}>
-                    ${prize.toLocaleString()}
-                  </div>
+      {/* Prize Ladder */}
+      <div style={{ padding: "0 16px", marginBottom: 16 }}>
+        <div className="section-header">Sunday Jackpot Ladder</div>
+        <div className="card">
+          {prizes.map(({ week, date, prize }) => {
+            const pct = prize / 250000;
+            const isPast = todayNum > week * 7;
+            const isBig = prize >= 100000;
+            return (
+              <div key={week} className="row" style={{ gap: 12, opacity: isPast ? 0.3 : 1 }}>
+                <div style={{ fontSize: 13, color: "var(--label3)", width: 44, flexShrink: 0, fontWeight: 500 }}>{date}</div>
+                <div className="prize-bar-track">
+                  <div className="prize-bar-fill" style={{ width: `${pct * 100}%`, background: isBig ? "var(--accent)" : "var(--fill)" }} />
                 </div>
-              );
-            })}
-          </div>
+                <div style={{ fontSize: 14, fontWeight: isBig ? 700 : 500, color: isBig ? "var(--accent)" : "var(--label3)", width: 68, textAlign: "right", flexShrink: 0 }}>
+                  ${prize.toLocaleString()}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      <div style={{ padding: "14px 16px 0" }}>
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
-          <div style={{ fontSize: 12, fontWeight: "600", color: C.text, marginBottom: 12 }}>Backup & Restore</div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={exportData}
-              style={{ flex: 1, padding: "10px", background: C.accentLight, border: `1px solid ${C.accent}`, borderRadius: 8, color: C.accent, fontSize: 13, fontWeight: "600", fontFamily: "inherit", cursor: "pointer" }}>
-              Export
-            </button>
-            <button onClick={() => importRef.current.click()}
-              style={{ flex: 1, padding: "10px", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, color: C.muted, fontSize: 13, fontWeight: "600", fontFamily: "inherit", cursor: "pointer" }}>
-              Import
-            </button>
+      {/* Account + AMOE */}
+      {amoeMode && (
+        <div style={{ padding: "0 16px", marginBottom: 16 }}>
+          <div className="section-header">Account</div>
+          <div className="card">
+            <div className="row" style={{ gap: 10 }}>
+              <input
+                type="text"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+                placeholder="Account number"
+                style={{ flex: 1, background: "transparent", border: "none", fontSize: 17, fontFamily: "inherit", color: "var(--label)", outline: "none" }}
+              />
+              <button onClick={copyAccount} disabled={!accountNumber}
+                className="pill-btn"
+                style={{ background: accountNumber ? "var(--blue)" : "var(--fill)", color: accountNumber ? "#fff" : "var(--label3)", fontSize: 14, padding: "6px 16px" }}>
+                {copyLabel}
+              </button>
+            </div>
+            <div className="row">
+              <a href="https://kwiktrip.com/game-alternate-means-of-entry" target="_blank" rel="noopener noreferrer" style={{ fontSize: 17 }}>
+                Alternate Means of Entry →
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Backup */}
+      <div style={{ padding: "0 16px", marginBottom: 16 }}>
+        <div className="section-header">Backup & Restore</div>
+        <div className="card">
+          <div className="row" style={{ gap: 12 }}>
+            <button onClick={exportData} className="pill-btn" style={{ flex: 1, background: "var(--blue)", color: "#fff" }}>Export</button>
+            <button onClick={() => importRef.current.click()} className="pill-btn" style={{ flex: 1, background: "var(--fill)", color: "var(--label)" }}>Import</button>
             <input ref={importRef} type="file" accept=".json" onChange={importData} style={{ display: "none" }} />
           </div>
         </div>
