@@ -316,17 +316,6 @@ function App() {
   ];
   const ticketSources = allTicketSources.filter(s => !s.amoeOnly || amoeMode);
 
-  const prizes = [
-    { week: 1, date: "Jun 7", prize: 10000 },
-    { week: 4, date: "Jun 28", prize: 25000 },
-    { week: 7, date: "Jul 12", prize: 35000 },
-    { week: 8, date: "Jul 19", prize: 40000 },
-    { week: 9, date: "Jul 26", prize: 45000 },
-    { week: 10, date: "Aug 2", prize: 50000 },
-    { week: 11, date: "Aug 9", prize: 100000 },
-    { week: 13, date: "Aug 16", prize: 250000 },
-  ];
-
   if (!loaded) return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--label3)", fontSize: 15 }}>
       Loading…
@@ -452,26 +441,116 @@ function App() {
         </div>
       </div>
 
-      {/* Prize Ladder */}
+      {/* Entries Projection Chart */}
       <div style={{ padding: "0 16px", marginBottom: 16 }}>
-        <div className="section-header">Sunday Jackpot Ladder</div>
-        <div className="card">
-          {prizes.map(({ week, date, prize }) => {
-            const pct = prize / 250000;
-            const isPast = todayNum > week * 7;
-            const isBig = prize >= 100000;
+        <div className="section-header">Entries Projection</div>
+        <div className="card" style={{ padding: "16px" }}>
+          {(() => {
+            // Build data points from log: day number -> running total
+            const points = Object.keys(log)
+              .map(Number)
+              .filter(d => parseInt(log[d].entries) > 0)
+              .sort((a, b) => a - b)
+              .map(d => ({ day: d, entries: parseInt(log[d].entries) }));
+
+            if (points.length < 2) {
+              return (
+                <div style={{ textAlign: "center", padding: "32px 0", color: "var(--label3)", fontSize: 15 }}>
+                  Log entries on at least 2 days to see a projection
+                </div>
+              );
+            }
+
+            // Calculate daily average from slope between first and last point
+            const first = points[0];
+            const last = points[points.length - 1];
+            const dailyAvg = (last.entries - first.entries) / (last.day - first.day);
+            const projectedFinal = Math.round(last.entries + dailyAvg * (TOTAL_DAYS - last.day));
+
+            // Build chart: actual points + projected line to day 77
+            const chartWidth = 320;
+            const chartHeight = 160;
+            const padL = 48, padR = 16, padT = 12, padB = 28;
+            const w = chartWidth - padL - padR;
+            const h = chartHeight - padT - padB;
+
+            const maxEntries = Math.max(projectedFinal, last.entries) * 1.05;
+            const minEntries = 0;
+
+            function xPos(day) { return padL + ((day - 1) / (TOTAL_DAYS - 1)) * w; }
+            function yPos(val) { return padT + h - ((val - minEntries) / (maxEntries - minEntries)) * h; }
+
+            // Actual path
+            const actualPath = points.map((p, i) =>
+              `${i === 0 ? "M" : "L"}${xPos(p.day).toFixed(1)},${yPos(p.entries).toFixed(1)}`
+            ).join(" ");
+
+            // Projection path from last actual point to day 77
+            const projPath = `M${xPos(last.day).toFixed(1)},${yPos(last.entries).toFixed(1)} L${xPos(TOTAL_DAYS).toFixed(1)},${yPos(projectedFinal).toFixed(1)}`;
+
+            // Y axis labels
+            const yLabels = [0, Math.round(maxEntries * 0.5), Math.round(maxEntries)];
+
+            // X axis labels: Jun 1, Jul 1, Aug 1, Aug 16
+            const xLabels = [
+              { day: 1, label: "Jun 1" },
+              { day: 31, label: "Jul 1" },
+              { day: 62, label: "Aug 1" },
+              { day: 77, label: "Aug 16" },
+            ];
+
             return (
-              <div key={week} className="row" style={{ gap: 12, opacity: isPast ? 0.3 : 1 }}>
-                <div style={{ fontSize: 13, color: "var(--label3)", width: 44, flexShrink: 0, fontWeight: 500 }}>{date}</div>
-                <div className="prize-bar-track">
-                  <div className="prize-bar-fill" style={{ width: `${pct * 100}%`, background: isBig ? "var(--accent)" : "var(--fill)" }} />
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--label3)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>Projected Total</div>
+                    <div style={{ fontSize: 26, fontWeight: 700, color: "var(--accent)", letterSpacing: -0.5 }}>{projectedFinal.toLocaleString()}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 11, color: "var(--label3)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>Avg/Day</div>
+                    <div style={{ fontSize: 26, fontWeight: 700, color: "var(--label)", letterSpacing: -0.5 }}>{dailyAvg.toFixed(1)}</div>
+                  </div>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: isBig ? 700 : 500, color: isBig ? "var(--accent)" : "var(--label3)", width: 68, textAlign: "right", flexShrink: 0 }}>
-                  ${prize.toLocaleString()}
-                </div>
-              </div>
+                <svg width="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`} style={{ overflow: "visible" }}>
+                  {/* Grid lines */}
+                  {yLabels.map(val => (
+                    <g key={val}>
+                      <line x1={padL} y1={yPos(val)} x2={padL + w} y2={yPos(val)}
+                        stroke="var(--sep)" strokeWidth="0.5" />
+                      <text x={padL - 6} y={yPos(val)} textAnchor="end" dominantBaseline="middle"
+                        fill="var(--label3)" fontSize="9" fontFamily="-apple-system, sans-serif">
+                        {val >= 1000 ? `${(val/1000).toFixed(0)}k` : val}
+                      </text>
+                    </g>
+                  ))}
+                  {/* X axis labels */}
+                  {xLabels.map(({ day, label }) => (
+                    <text key={day} x={xPos(day)} y={chartHeight - 4} textAnchor="middle"
+                      fill="var(--label3)" fontSize="9" fontFamily="-apple-system, sans-serif">
+                      {label}
+                    </text>
+                  ))}
+                  {/* Today line */}
+                  <line x1={xPos(todayNum)} y1={padT} x2={xPos(todayNum)} y2={padT + h}
+                    stroke="var(--blue)" strokeWidth="1" strokeDasharray="3,3" opacity="0.5" />
+                  {/* Projection line */}
+                  <path d={projPath} fill="none" stroke="var(--accent)" strokeWidth="1.5"
+                    strokeDasharray="5,4" opacity="0.6" />
+                  {/* Actual line */}
+                  <path d={actualPath} fill="none" stroke="var(--accent)" strokeWidth="2.5"
+                    strokeLinecap="round" strokeLinejoin="round" />
+                  {/* Dots for actual points */}
+                  {points.map(p => (
+                    <circle key={p.day} cx={xPos(p.day)} cy={yPos(p.entries)} r="3"
+                      fill="var(--accent)" />
+                  ))}
+                  {/* Projected end dot */}
+                  <circle cx={xPos(TOTAL_DAYS)} cy={yPos(projectedFinal)} r="3"
+                    fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+                </svg>
+              </>
             );
-          })}
+          })()}
         </div>
       </div>
 
@@ -523,4 +602,3 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
 </html>
-
