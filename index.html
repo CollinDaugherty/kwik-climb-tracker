@@ -464,7 +464,7 @@ function App() {
             // Calculate daily average from slope between first and last point
             const first = points[0];
             const last = points[points.length - 1];
-            const dailyAvg = (last.entries - first.entries) / (last.day - first.day);
+            const dailyAvg = last.entries / last.day;
             const projectedFinal = Math.round(last.entries + dailyAvg * (TOTAL_DAYS - last.day));
 
             // Build chart: actual points + projected line to day 77
