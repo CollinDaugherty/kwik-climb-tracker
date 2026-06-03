@@ -116,7 +116,7 @@
     }
     .seg-bar button {
       flex: 1;
-      height: 6px;
+      height: 10px;
       border: none;
       border-radius: 3px;
       cursor: pointer;
@@ -220,6 +220,51 @@ const defaultDay = () => ({
   entries: "", visits: "",
 });
 
+function DrawingBreakdown({ drawings, entriesForDrawing, todayNum }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div style={{ borderTop: "0.5px solid var(--sep)" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: "100%", padding: "12px 16px", background: "transparent", border: "none",
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          cursor: "pointer", fontFamily: "inherit",
+        }}
+      >
+        <span style={{ fontSize: 15, color: "var(--blue)", fontWeight: 500 }}>Entries per drawing</span>
+        <span style={{ fontSize: 13, color: "var(--label3)", transition: "transform 0.2s", display: "inline-block", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+      </button>
+      {open && (
+        <div style={{ borderTop: "0.5px solid var(--sep)" }}>
+          {drawings.map(d => {
+            const entries = entriesForDrawing(d.day);
+            const isPast = todayNum > d.day;
+            return (
+              <div key={d.day} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "10px 16px", borderBottom: "0.5px solid var(--sep)",
+                opacity: isPast ? 0.45 : 1,
+              }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: "var(--label)" }}>{d.label} · {d.date}</div>
+                  <div style={{ fontSize: 12, color: "var(--label3)", marginTop: 2 }}>${d.prize.toLocaleString()} jackpot</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 17, fontWeight: 700, color: entries > 0 ? "var(--accent)" : "var(--label3)" }}>
+                    {entries > 0 ? entries.toLocaleString() : "—"}
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--label3)", marginTop: 1 }}>entries</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function App() {
   const [log, setLog] = useState({});
   const [activeDay, setActiveDay] = useState(getDayNumber());
@@ -262,20 +307,49 @@ function App() {
 
   const totalEntries = Object.values(log).reduce((max, d) => Math.max(max, parseInt(d.entries) || 0), 0);
 
-  const activeDayVisits = parseInt((log[activeDay] || {}).visits) || 0;
-  const currentVisits = activeDayVisits || Object.keys(log)
+  // Visits as of the active day being viewed
+  const activeDayVisitsCurrent = parseInt((log[activeDay] || {}).visits) || Object.keys(log)
     .map(Number)
-    .filter(d => d <= todayNum && parseInt(log[d].visits) > 0)
+    .filter(d => d <= activeDay && parseInt(log[d].visits) > 0)
     .sort((a, b) => b - a)
     .reduce((val, d) => val || (parseInt(log[d].visits) || 0), 0);
+  const currentVisits = activeDayVisitsCurrent;
 
-  const daysRemaining = TOTAL_DAYS - todayNum;
+  const daysRemaining = TOTAL_DAYS - activeDay;
   const visitsNeeded = Math.max(0, daysRemaining * 5 - currentVisits - daysRemaining);
   const targetPerDay = daysRemaining > 0 ? Math.ceil(visitsNeeded / daysRemaining) : 0;
   const onTrack = currentVisits + daysRemaining >= daysRemaining * 5;
   const stillNeed = Math.max(0, daysRemaining * 4 - currentVisits);
 
   const dayDate = new Date(SWEEPSTAKES_START.getTime() + (activeDay - 1) * 86400000);
+
+  // All drawings with correct prizes from official rules
+  // Each drawing includes all entries from day 1 through that drawing's last day
+  const drawings = [
+    { day: 7,  date: "Jun 7",  label: "Week 1",  prize: 10000,  daily: 1000 },
+    { day: 14, date: "Jun 14", label: "Week 2",  prize: 15000,  daily: 1000 },
+    { day: 21, date: "Jun 21", label: "Week 3",  prize: 20000,  daily: 1000 },
+    { day: 28, date: "Jun 28", label: "Week 4",  prize: 25000,  daily: 1000 },
+    { day: 35, date: "Jul 5",  label: "Week 5",  prize: 30000,  daily: 1000 },
+    { day: 42, date: "Jul 12", label: "Week 6",  prize: 35000,  daily: 1000 },
+    { day: 49, date: "Jul 19", label: "Week 7",  prize: 40000,  daily: 1000 },
+    { day: 56, date: "Jul 26", label: "Week 8",  prize: 45000,  daily: 1000 },
+    { day: 63, date: "Aug 2",  label: "Week 9",  prize: 50000,  daily: 1000 },
+    { day: 70, date: "Aug 9",  label: "Week 10", prize: 100000, daily: 1000 },
+    { day: 77, date: "Aug 16", label: "Week 11", prize: 250000, daily: 1000 },
+  ];
+  const nextDrawing = drawings.find(d => d.day >= todayNum);
+  const daysToDrawing = nextDrawing ? nextDrawing.day - todayNum : 0;
+
+  // Entries towards each drawing = entries logged on or before that drawing's last day
+  // Since entries is a running total, find the latest logged entry on or before that day
+  function entriesForDrawing(drawingDay) {
+    const relevantDays = Object.keys(log)
+      .map(Number)
+      .filter(d => d <= drawingDay && parseInt(log[d].entries) > 0)
+      .sort((a, b) => b - a);
+    return relevantDays.length > 0 ? (parseInt(log[relevantDays[0]].entries) || 0) : 0;
+  }
 
   function copyAccount() {
     navigator.clipboard.writeText(accountNumber).then(() => {
@@ -332,21 +406,39 @@ function App() {
         <div style={{ fontSize: 15, color: "var(--label3)", marginTop: 6, fontWeight: 400 }}>Jun 1 – Aug 16</div>
       </div>
 
-      {/* Stats row */}
+      {/* Stats + Countdown combined card */}
       <div style={{ padding: "0 16px", marginBottom: 32 }}>
-        <div className="card" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
-          {[
-            { label: "Entries", value: totalEntries.toLocaleString(), color: "var(--accent)" },
-            { label: "Visit Pts", value: currentVisits, color: onTrack ? "var(--accent)" : "var(--red)" },
-            { label: "Days Left", value: daysRemaining, color: "var(--label)" },
-          ].map((s, i) => (
-            <div key={s.label} style={{ padding: "16px 12px", textAlign: "center", borderRight: i < 2 ? "0.5px solid var(--sep)" : "none" }}>
-              <div className="stat-val" style={{ color: s.color }}>{s.value}</div>
-              <div className="stat-lbl">{s.label}</div>
+        <div className="card">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
+            {[
+              { label: "Entries", value: totalEntries.toLocaleString(), color: "var(--accent)" },
+              { label: "Visit Pts", value: activeDayVisitsCurrent, color: onTrack ? "var(--accent)" : "var(--red)" },
+              { label: "Days Left", value: daysRemaining, color: "var(--label)" },
+            ].map((s, i) => (
+              <div key={s.label} style={{ padding: "16px 12px", textAlign: "center", borderRight: i < 2 ? "0.5px solid var(--sep)" : "none" }}>
+                <div className="stat-val" style={{ color: s.color }}>{s.value}</div>
+                <div className="stat-lbl">{s.label}</div>
+              </div>
+            ))}
+          </div>
+          {nextDrawing && (
+            <div style={{ borderTop: "0.5px solid var(--sep)", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 13, color: "var(--label3)", fontWeight: 500, marginBottom: 3 }}>{nextDrawing.label} · {nextDrawing.date}</div>
+                <div style={{ fontSize: 19, fontWeight: 700, color: "var(--accent)", letterSpacing: -0.5 }}>${nextDrawing.prize.toLocaleString()} jackpot</div>
+                <div style={{ fontSize: 12, color: "var(--label3)", marginTop: 2 }}>+ daily $1,000 prizes Mon–Sat</div>
+              </div>
+              <div style={{ textAlign: "center", background: "var(--card2)", borderRadius: 12, padding: "10px 16px", minWidth: 70 }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--label)", letterSpacing: -1, lineHeight: 1 }}>{daysToDrawing}</div>
+                <div style={{ fontSize: 11, color: "var(--label3)", fontWeight: 500, marginTop: 3 }}>{daysToDrawing === 1 ? "day" : "days"}</div>
+              </div>
             </div>
-          ))}
+          )}
+          {nextDrawing && <DrawingBreakdown drawings={drawings} entriesForDrawing={entriesForDrawing} todayNum={todayNum} />}
         </div>
       </div>
+
+
 
       {/* Day nav */}
       <div style={{ padding: "0 20px", marginBottom: 12 }}>
@@ -386,13 +478,13 @@ function App() {
       {/* Entries + Visits */}
       <div style={{ padding: "0 16px", marginBottom: 16 }}>
         <div className="section-header">Daily Totals</div>
-        <div className="card" style={{ opacity: isFuture ? 0.4 : 1 }}>
+        <div className="card" style={{ opacity: isFuture ? 0.4 : 1, display: "grid", gridTemplateColumns: "1fr 1fr" }}>
           {[
             { key: "entries", label: "Entries", color: "var(--accent)" },
             { key: "visits", label: "Visits", color: "var(--accent)" },
-          ].map(({ key, label, color }) => (
-            <div key={key} className="row" style={{ justifyContent: "space-between" }}>
-              <span style={{ fontSize: 17, color: "var(--label)", fontWeight: 400 }}>{label}</span>
+          ].map(({ key, label, color }, i) => (
+            <div key={key} style={{ padding: "14px 16px", borderRight: i === 0 ? "0.5px solid var(--sep)" : "none" }}>
+              <div style={{ fontSize: 12, color: "var(--label3)", fontWeight: 500, marginBottom: 6 }}>{label}</div>
               <input
                 className="num-input"
                 type="number" min="0"
@@ -400,7 +492,7 @@ function App() {
                 onChange={(e) => updateDay(key, e.target.value)}
                 placeholder="—"
                 disabled={isFuture}
-                style={{ textAlign: "right", width: 120, color, fontSize: 22, fontWeight: 600 }}
+                style={{ color, fontSize: 26, fontWeight: 700, width: "100%" }}
               />
             </div>
           ))}
@@ -446,10 +538,10 @@ function App() {
         <div className="section-header">Entries Projection</div>
         <div className="card" style={{ padding: "16px" }}>
           {(() => {
-            // Build data points from log: day number -> running total
+            // Build data points up to activeDay only
             const points = Object.keys(log)
               .map(Number)
-              .filter(d => parseInt(log[d].entries) > 0)
+              .filter(d => d <= activeDay && parseInt(log[d].entries) > 0)
               .sort((a, b) => a - b)
               .map(d => ({ day: d, entries: parseInt(log[d].entries) }));
 
@@ -461,11 +553,12 @@ function App() {
               );
             }
 
-            // Calculate daily average from slope between first and last point
+            // Calculate daily average using data up to activeDay
             const first = points[0];
             const last = points[points.length - 1];
             const dailyAvg = last.entries / last.day;
             const projectedFinal = Math.round(last.entries + dailyAvg * (TOTAL_DAYS - last.day));
+            // Projection starts from last known point and goes to day 77
 
             // Build chart: actual points + projected line to day 77
             const chartWidth = 320;
